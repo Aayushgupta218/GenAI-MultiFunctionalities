@@ -1,6 +1,7 @@
 # Environment variables
 .env
 *.env
+.secrets
 
 # Python files
 __pycache__/

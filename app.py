@@ -10,10 +10,14 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.formatters import TextFormatter
 import webbrowser
 import re
 from datetime import datetime
 import json
+import requests
+import time
+from urllib.parse import urlparse, parse_qs
 
 load_dotenv()  # load all the env variables 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -62,23 +66,131 @@ def get_conversational_chain():
     prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
     return load_qa_chain(model, chain_type="stuff", prompt=prompt)
 
+def extract_video_id(url):
+    """Extract video ID from various YouTube URL formats"""
+    patterns = [
+        r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)',
+        r'youtube\.com\/v\/([^&\n?#]+)',
+        r'youtube\.com\/shorts\/([^&\n?#]+)'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    return None
+
 def extract_transcript_details(youtube_video_url):
+    """Enhanced transcript extraction with multiple fallback methods"""
     try:
-        video_id = youtube_video_url.split("=")[-1].split("&")[0]
-        transcript_text = YouTubeTranscriptApi.get_transcript(video_id)
+        video_id = extract_video_id(youtube_video_url)
+        if not video_id:
+            raise Exception("Invalid YouTube URL format")
         
-        # Enhanced transcript with timestamps
+        # Method 1: Try with different language codes
+        language_codes = ['en', 'en-US', 'en-GB', 'auto']
+        transcript_text = None
         formatted_transcript = []
-        full_text = ""
         
-        for item in transcript_text:
-            timestamp = f"[{int(item['start']//60):02d}:{int(item['start']%60):02d}]"
-            formatted_transcript.append(f"{timestamp} {item['text']}")
-            full_text += item["text"] + " "
-            
-        return full_text, formatted_transcript
+        for lang in language_codes:
+            try:
+                if lang == 'auto':
+                    # Try to get any available transcript
+                    transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                    for transcript in transcript_list:
+                        try:
+                            transcript_data = transcript.fetch()
+                            break
+                        except:
+                            continue
+                else:
+                    transcript_data = YouTubeTranscriptApi.get_transcript(video_id, languages=[lang])
+                
+                # If we got transcript data, process it
+                if transcript_data:
+                    full_text = ""
+                    for item in transcript_data:
+                        timestamp = f"[{int(item['start']//60):02d}:{int(item['start']%60):02d}]"
+                        formatted_transcript.append(f"{timestamp} {item['text']}")
+                        full_text += item["text"] + " "
+                    
+                    return full_text, formatted_transcript
+                    
+            except Exception as e:
+                continue
+        
+        # Method 2: Try manual transcript extraction (if available)
+        if not transcript_text:
+            try:
+                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                # Get the first available transcript
+                transcript = next(iter(transcript_list))
+                transcript_data = transcript.fetch()
+                
+                full_text = ""
+                for item in transcript_data:
+                    timestamp = f"[{int(item['start']//60):02d}:{int(item['start']%60):02d}]"
+                    formatted_transcript.append(f"{timestamp} {item['text']}")
+                    full_text += item["text"] + " "
+                
+                return full_text, formatted_transcript
+                
+            except Exception as e:
+                pass
+        
+        # If all methods fail, provide alternative
+        raise Exception("No transcript available - try a different video or check if captions are enabled")
+        
     except Exception as e:
-        raise Exception("Error extracting transcript: " + str(e))
+        error_msg = str(e)
+        if "blocked" in error_msg.lower() or "ip" in error_msg.lower():
+            raise Exception("""
+            🚫 YouTube API Access Blocked
+            
+            This happens when:
+            • Too many requests from your IP
+            • Using cloud/server IP (like Streamlit Cloud)
+            • Regional restrictions
+            
+            💡 Solutions:
+            1. Try a different video with captions
+            2. Wait 10-15 minutes and try again
+            3. Use a video you know has auto-generated captions
+            4. Try running locally instead of on cloud platforms
+            
+            📝 Alternative: Copy and paste the transcript manually if available
+            """)
+        else:
+            raise Exception(f"Transcript extraction failed: {error_msg}")
+
+def manual_transcript_input():
+    """Allow users to manually input transcript if API fails"""
+    st.markdown("### 📝 **Manual Transcript Input**")
+    st.info("💡 If API fails, you can manually copy-paste the transcript from YouTube")
+    
+    with st.expander("📋 How to get transcript manually", expanded=False):
+        st.markdown("""
+        **Steps to get transcript manually:**
+        1. Go to your YouTube video
+        2. Click on "..." (More) below the video
+        3. Click "Show transcript"
+        4. Copy all the text and paste it below
+        5. Or use YouTube's auto-generated captions
+        """)
+    
+    manual_transcript = st.text_area(
+        "Paste transcript here:",
+        placeholder="Paste the YouTube video transcript here...",
+        height=200,
+        help="Copy the transcript from YouTube and paste it here"
+    )
+    
+    if manual_transcript and len(manual_transcript.strip()) > 50:
+        # Process manual transcript
+        formatted_transcript = manual_transcript.split('\n')
+        return manual_transcript, formatted_transcript
+    
+    return None, None
 
 def generate_comprehensive_summary(transcript_text, summary_type="detailed"):
     """Generate different types of summaries based on user preference"""
@@ -386,10 +498,24 @@ def main():
         )
 
         if youtube_video_url:
+            # First try automatic extraction
+            transcript_text = None
+            formatted_transcript = None
+            
             try:
-                with st.spinner("🔄 Extracting transcript and metadata..."):
+                with st.spinner("🔄 Extracting transcript..."):
                     transcript_text, formatted_transcript = extract_transcript_details(youtube_video_url)
-
+                    
+            except Exception as e:
+                st.error(f"❌ **Transcript Extraction Failed:**")
+                st.error(str(e))
+                
+                # Show manual input option
+                st.markdown("---")
+                transcript_text, formatted_transcript = manual_transcript_input()
+            
+            # Process if we have transcript (either automatic or manual)
+            if transcript_text and len(transcript_text.strip()) > 50:
                 # Summary type selector
                 col1, col2 = st.columns([1, 1])
                 with col1:
@@ -429,15 +555,29 @@ def main():
                                 st.metric("Reading Time", f"{len(words) // 200} min")
                                 st.metric("Speaking Time", f"{len(words) // 150} min")
                     
-                    # Transcript with timestamps
-                    with st.expander("📝 **Full Transcript with Timestamps**", expanded=False):
-                        st.text_area("Transcript", "\n".join(formatted_transcript[:50]), height=300)
-                        
+                    # Transcript with timestamps (if available)
+                    if formatted_transcript:
+                        with st.expander("📝 **Full Transcript with Timestamps**", expanded=False):
+                            st.text_area("Transcript", "\n".join(formatted_transcript[:50]), height=300)
                 else:
                     st.error("Failed to generate analysis. Please try again.")
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-                st.info("💡 Make sure the YouTube URL is valid and the video has captions available.")
+            elif youtube_video_url:
+                st.warning("⚠️ Please provide a valid transcript (minimum 50 characters)")
+        
+        # Alternative video suggestions
+        st.markdown("---")
+        st.markdown("### 💡 **Suggested Videos for Testing:**")
+        test_videos = [
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "https://www.youtube.com/watch?v=jNQXAC9IVRw",
+            "https://www.youtube.com/watch?v=fJ9rUzIMcZQ"
+        ]
+        
+        col1, col2, col3 = st.columns(3)
+        for i, video in enumerate(test_videos):
+            with [col1, col2, col3][i]:
+                if st.button(f"📺 Test Video {i+1}", key=f"test_video_{i}"):
+                    st.session_state.test_video = video
 
     elif option == "Intelligent PDF Assistant":
         st.markdown("### 📚 Intelligent PDF Assistant")

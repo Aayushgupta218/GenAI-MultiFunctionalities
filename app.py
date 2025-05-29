@@ -27,7 +27,7 @@ def get_text_chunks(text):
     return text_splitter.split_text(text)
 
 def get_vector_store(text_chunks):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
     vector_store.save_local("faiss_index")
 
@@ -39,7 +39,7 @@ def get_conversational_chain():
     Question:\n {question}?\n
     Answer:
     """
-    model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
+    model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.3)
     prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
     return load_qa_chain(model, chain_type="stuff", prompt=prompt)
 
@@ -53,12 +53,25 @@ def extract_transcript_details(youtube_video_url):
         raise Exception("Error extracting transcript: " + str(e))
 
 def generate_gemini_summary(transcript_text, prompt):
-    model = genai.GenerativeModel("gemini-pro")
-    response = model.generate_content(prompt + transcript_text)
-    return response.text
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        
+        if not transcript_text or not prompt:
+            return "Error: Missing transcript or prompt"
+            
+        response = model.generate_content(prompt + transcript_text)
+        
+        if hasattr(response, 'text'):
+            return response.text
+        return "Sorry, couldn't generate summary."
+        
+    except Exception as e:
+        st.error(f"Error generating summary: {str(e)}")
+        st.info("Please verify your API key and internet connection")
+        return None
 
 def user_input(user_question):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     try:
         new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
         docs = new_db.similarity_search(user_question)
@@ -71,7 +84,22 @@ def user_input(user_question):
     except Exception as e:
         st.error(f"An error occurred: {e}")
 
+def check_api_key():
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        st.error("🔑 Google API Key not found!")
+        st.markdown("""
+        ### How to fix this:
+        1. Create a `.env` file in your project directory
+        2. Add your API key: `GOOGLE_API_KEY=your_key_here`
+        3. Make sure the API key is from [Google AI Studio](https://makersuite.google.com/app/apikey)
+        """)
+        st.stop()
+    return api_key
+
 def main():
+    api_key = check_api_key()
+    genai.configure(api_key=api_key)
     st.set_page_config(page_title="Document & Video Summarizer", layout="wide", page_icon="📄")
     st.title("Document and Video Summarizer 🧠")
 
@@ -122,8 +150,11 @@ def main():
                 with st.spinner("Generating summary..."):
                     summary = generate_gemini_summary(transcript_text, y_prompt)
 
-                st.subheader("Video Summary:")
-                st.write(summary)
+                if summary:  # Added check to ensure summary is not None
+                    st.subheader("Video Summary:")
+                    st.write(summary)
+                else:
+                    st.error("Failed to generate summary. Please try again.")
             except Exception as e:
                 st.error(f"An error occurred: {e}")
 

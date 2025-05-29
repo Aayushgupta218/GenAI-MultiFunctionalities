@@ -10,6 +10,7 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi
+import webbrowser
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -97,45 +98,146 @@ def check_api_key():
         st.stop()
     return api_key
 
+def display_navigation_section():
+    """Display navigation section with links to other applications"""
+    st.markdown("---")
+    st.markdown("## 🚀 **Explore More AI Tools**")
+    st.markdown("### Access additional AI-powered applications:")
+    
+    # Create columns for better layout
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        # SQL Query Generator Button
+        st.markdown("#### 🔍 **SQL Query Generator**")
+        st.markdown("*Generate SQL queries from natural language using AI*")
+        
+        sql_url = "https://sqlquerygenerator-7xbeqcgnivqtywjghc4sd3.streamlit.app/"
+        
+        # Custom styled button using HTML
+        st.markdown(f"""
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="{sql_url}" target="_blank" style="text-decoration: none;">
+                <button style="
+                    background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+                    color: white;
+                    padding: 15px 30px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    border: none;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                    transition: all 0.3s ease;
+                    width: 250px;
+                    height: 50px;
+                " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)';" 
+                   onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)';">
+                    🔍 Open SQL Generator
+                </button>
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Alternative method using st.link_button (if available in your Streamlit version)
+        # st.link_button(
+        #     "🔍 Open SQL Query Generator", 
+        #     sql_url,
+        #     help="Generate SQL queries from natural language",
+        #     use_container_width=True
+        # )
+        
+        # Features list
+        with st.expander("✨ SQL Generator Features"):
+            st.markdown("""
+            - 📊 **Natural Language to SQL**: Convert plain English questions to SQL queries
+            - 📁 **Excel File Support**: Upload and query Excel data directly
+            - 🤖 **AI-Powered**: Uses Google Gemini AI for intelligent query generation  
+            - 💾 **Instant Results**: Execute queries and view results immediately
+            - 🔒 **Secure**: Safe handling of your data with proper sanitization
+            """)
+
 def main():
     api_key = check_api_key()
     genai.configure(api_key=api_key)
-    st.set_page_config(page_title="Document & Video Summarizer", layout="wide", page_icon="📄")
-    st.title("Document and Video Summarizer 🧠")
+    st.set_page_config(
+        page_title="AI Document & Video Suite", 
+        layout="wide", 
+        page_icon="🧠",
+        initial_sidebar_state="expanded"
+    )
+    
+    # Main title with improved styling
+    st.markdown("""
+    <div style="text-align: center; padding: 20px 0;">
+        <h1 style="color: #2E86AB; font-size: 2.5em; margin-bottom: 10px;">
+            🧠 AI Document & Video Suite
+        </h1>
+        <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">
+            Powered by Google Gemini AI - Your AI Assistant for Documents and Videos
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Display navigation section at the top
+    display_navigation_section()
+    
+    # Main application content
+    st.markdown("---")
+    st.markdown("## 📄 **Current Application Features**")
 
     if not os.getenv("GOOGLE_API_KEY"):
         st.error("Missing Google API Key. Please set it in the .env file.")
         return
 
-    option = st.selectbox("Choose a task:", ["Chat with PDFs", "Summarize YouTube Video"])
+    option = st.selectbox(
+        "Choose a task:", 
+        ["Chat with PDFs", "Summarize YouTube Video"],
+        help="Select the AI feature you want to use"
+    )
 
     if option == "Chat with PDFs":
-        st.subheader("Chat with Multiple PDF Files")
-        user_question = st.text_input("Ask a Question from the PDF files...")
+        st.markdown("### 📚 Chat with Multiple PDF Files")
+        st.markdown("*Ask questions about your uploaded PDF documents*")
+        
+        user_question = st.text_input(
+            "Ask a Question from the PDF files...",
+            placeholder="e.g., What is the main topic discussed in the document?"
+        )
 
         if user_question:
             user_input(user_question)
 
         with st.sidebar:
-            st.title("Menu:")
-            pdf_docs = st.file_uploader("Upload your PDF Files and Click Submit", accept_multiple_files=True)
+            st.markdown("### 📁 **Upload Documents**")
+            pdf_docs = st.file_uploader(
+                "Upload your PDF Files and Click Submit", 
+                accept_multiple_files=True,
+                type=['pdf'],
+                help="Select one or more PDF files to analyze"
+            )
 
-            if st.button("Submit & Process"):
+            if st.button("🔄 Submit & Process", type="primary"):
                 if pdf_docs:
-                    with st.spinner("Processing..."):
+                    with st.spinner("Processing your PDFs..."):
                         raw_text = get_pdf_text(pdf_docs)
                         if not raw_text.strip():
                             st.warning("Uploaded PDFs contain no text. Please upload valid PDFs.")
                             return
                         text_chunks = get_text_chunks(raw_text)
                         get_vector_store(text_chunks)
-                        st.success("PDFs processed successfully! You can now ask questions.")
+                        st.success("✅ PDFs processed successfully! You can now ask questions.")
                 else:
                     st.warning("Please upload at least one PDF file.")
 
     elif option == "Summarize YouTube Video":
-        st.subheader("Summarize YouTube Video")
-        youtube_video_url = st.text_input("Enter YouTube Video URL:")
+        st.markdown("### 🎥 Summarize YouTube Video")
+        st.markdown("*Get AI-generated summaries of YouTube videos*")
+        
+        youtube_video_url = st.text_input(
+            "Enter YouTube Video URL:",
+            placeholder="https://www.youtube.com/watch?v=example"
+        )
 
         if youtube_video_url:
             try:
@@ -150,13 +252,28 @@ def main():
                 with st.spinner("Generating summary..."):
                     summary = generate_gemini_summary(transcript_text, y_prompt)
 
-                if summary:  # Added check to ensure summary is not None
-                    st.subheader("Video Summary:")
+                if summary:
+                    st.markdown("### 📝 **Video Summary:**")
                     st.write(summary)
+                    
+                    # Additional features
+                    with st.expander("📊 Transcript Details"):
+                        st.write(f"**Transcript Length:** {len(transcript_text)} characters")
+                        st.write(f"**Estimated Reading Time:** {len(transcript_text.split()) // 200} minutes")
                 else:
                     st.error("Failed to generate summary. Please try again.")
             except Exception as e:
                 st.error(f"An error occurred: {e}")
+                st.info("Make sure the YouTube URL is valid and the video has captions available.")
+
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; padding: 20px; color: #666;">
+        <p>Built with ❤️ using Streamlit and Google Gemini AI</p>
+        <p><small>For the best experience, ensure a stable internet connection</small></p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()

@@ -98,53 +98,103 @@ def check_api_key():
         st.stop()
     return api_key
 
+def display_feature_cards():
+    """Display feature cards for current application"""
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+        ">
+            <div style="font-size: 2.5em; margin-bottom: 15px;">🎥</div>
+            <h3 style="margin: 0 0 10px 0; font-size: 1.3em;">YouTube Summarizer</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.9em;">Extract and summarize key insights from any YouTube video using AI-powered transcript analysis</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
+        ">
+            <div style="font-size: 2.5em; margin-bottom: 15px;">📚</div>
+            <h3 style="margin: 0 0 10px 0; font-size: 1.3em;">PDF Chat Assistant</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.9em;">Upload multiple PDFs and ask intelligent questions. Get instant answers from your documents</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+def create_modern_selector():
+    """Create a modern tab-like selector"""
+    st.markdown("""
+    <style>
+    .stSelectbox > div > div {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 25px;
+        border: none;
+        font-weight: 600;
+        font-size: 16px;
+        padding: 10px 20px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 def display_navigation_section():
     """Display navigation section with links to other applications"""
     st.markdown("---")
-    st.markdown("## 🚀 **Explore More AI Tools**")
-    st.markdown("### Access additional AI-powered applications:")
+    
+    st.markdown("## 🚀 Explore More AI Tools")
+    st.markdown("Discover additional AI-powered applications to boost your productivity")
     
     # Create columns for better layout
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        # SQL Query Generator Button
-        st.markdown("#### 🔍 **SQL Query Generator**")
-        st.markdown("*Generate SQL queries from natural language using AI*")
-        
-        sql_url = "https://sqlquerygenerator-7xbeqcgnivqtywjghc4sd3.streamlit.app/"
-        
-        # Custom styled button using HTML
-        st.markdown(f"""
-        <div style="text-align: center; margin: 20px 0;">
-            <a href="{sql_url}" target="_blank" style="text-decoration: none;">
-                <button style="
-                    background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
-                    color: white;
-                    padding: 15px 30px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    border: none;
-                    border-radius: 25px;
-                    cursor: pointer;
-                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-                    transition: all 0.3s ease;
-                    width: 250px;
-                    height: 50px;
-                " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.3)';" 
-                   onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.2)';">
-                    🔍 Open SQL Generator
-                </button>
-            </a>
+        # Enhanced card design for SQL Generator
+        st.markdown("""
+        <div style="
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            border-radius: 20px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);
+            margin: 20px 0;
+        ">
+            <div style="font-size: 3em; margin-bottom: 20px;">🔍</div>
+            <h3 style="margin: 0 0 15px 0; font-size: 1.5em;">SQL Query Generator</h3>
+            <p style="margin: 0 0 25px 0; opacity: 0.95; font-size: 1em;">
+                Generate SQL queries from natural language using AI
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Features list
-        with st.expander("✨ SQL Generator Features"):
+        # Simple button without complex styling
+        sql_url = "https://sqlquerygenerator-7xbeqcgnivqtywjghc4sd3.streamlit.app/"
+        
+        if st.button("🚀 Launch SQL Generator", key="sql_generator_btn", use_container_width=True):
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={sql_url}">', unsafe_allow_html=True)
+            st.success("Redirecting to SQL Generator...")
+        
+        # Enhanced features list
+        with st.expander("✨ SQL Generator Features", expanded=False):
             st.markdown("""
             - 📊 **Natural Language to SQL**: Convert plain English questions to SQL queries
-            - 📁 **Excel File Support**: Upload and query Excel data directly
-            - 🤖 **AI-Powered**: Uses Google Gemini AI for intelligent query generation  
+            - 📁 **Excel File Support**: Upload and query Excel data directly  
+            - 🤖 **AI-Powered**: Uses Google Gemini AI for intelligent query generation
             - 💾 **Instant Results**: Execute queries and view results immediately
             - 🔒 **Secure**: Safe handling of your data with proper sanitization
             """)
@@ -159,81 +209,60 @@ def main():
         initial_sidebar_state="expanded"
     )
     
-    # Main title with improved styling
+    # Enhanced main title with gradient background
     st.markdown("""
-    <div style="text-align: center; padding: 20px 0;">
-        <h1 style="color: #2E86AB; font-size: 2.5em; margin-bottom: 10px;">
+    <div style="
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 0;
+        margin: -1rem -1rem 2rem -1rem;
+        text-align: center;
+        color: white;
+    ">
+        <h1 style="font-size: 3em; margin-bottom: 15px; font-weight: 700;">
             🧠 AI Document & Video Suite
         </h1>
-        <p style="font-size: 1.2em; color: #666; margin-bottom: 30px;">
-            Powered by Google Gemini AI - Your AI Assistant for Documents and Videos
+        <p style="font-size: 1.3em; opacity: 0.9; margin: 0;">
+            Powered by Google Gemini AI - Your Intelligent Assistant for Documents and Videos
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Display navigation section at the top
-    display_navigation_section()
+    # Display feature cards upfront
+    st.markdown("## 🎯 Current Application Features")
+    st.markdown("Choose from our powerful AI-driven tools below")
     
-    # Main application content
-    st.markdown("---")
-    st.markdown("## 📄 **Current Application Features**")
+    display_feature_cards()
 
     if not os.getenv("GOOGLE_API_KEY"):
         st.error("Missing Google API Key. Please set it in the .env file.")
         return
 
-    option = st.selectbox(
-        "Choose a task:", 
-        ["Chat with PDFs", "Summarize YouTube Video"],
-        help="Select the AI feature you want to use"
-    )
-
-    if option == "Chat with PDFs":
-        st.markdown("### 📚 Chat with Multiple PDF Files")
-        st.markdown("*Ask questions about your uploaded PDF documents*")
-        
-        user_question = st.text_input(
-            "Ask a Question from the PDF files...",
-            placeholder="e.g., What is the main topic discussed in the document?"
+    # Create the selector with YouTube as default (index 0)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        option = st.selectbox(
+            "🎯 Select AI Tool:",
+            ["Summarize YouTube Video", "Chat with PDFs"],
+            index=0,
+            help="Select the AI feature you want to use"
         )
 
-        if user_question:
-            user_input(user_question)
+    # Enhanced styling for main content area
+    st.markdown("---")
 
-        with st.sidebar:
-            st.markdown("### 📁 **Upload Documents**")
-            pdf_docs = st.file_uploader(
-                "Upload your PDF Files and Click Submit", 
-                accept_multiple_files=True,
-                type=['pdf'],
-                help="Select one or more PDF files to analyze"
-            )
-
-            if st.button("🔄 Submit & Process", type="primary"):
-                if pdf_docs:
-                    with st.spinner("Processing your PDFs..."):
-                        raw_text = get_pdf_text(pdf_docs)
-                        if not raw_text.strip():
-                            st.warning("Uploaded PDFs contain no text. Please upload valid PDFs.")
-                            return
-                        text_chunks = get_text_chunks(raw_text)
-                        get_vector_store(text_chunks)
-                        st.success("✅ PDFs processed successfully! You can now ask questions.")
-                else:
-                    st.warning("Please upload at least one PDF file.")
-
-    elif option == "Summarize YouTube Video":
-        st.markdown("### 🎥 Summarize YouTube Video")
-        st.markdown("*Get AI-generated summaries of YouTube videos*")
+    if option == "Summarize YouTube Video":
+        st.markdown("### 🎥 YouTube Video Summarizer")
+        st.markdown("Get AI-generated summaries and key insights from any YouTube video")
         
         youtube_video_url = st.text_input(
-            "Enter YouTube Video URL:",
-            placeholder="https://www.youtube.com/watch?v=example"
+            "🔗 Enter YouTube Video URL:",
+            placeholder="https://www.youtube.com/watch?v=example",
+            help="Paste the complete YouTube video URL here"
         )
 
         if youtube_video_url:
             try:
-                with st.spinner("Extracting transcript..."):
+                with st.spinner("🔄 Extracting transcript..."):
                     transcript_text = extract_transcript_details(youtube_video_url)
 
                 y_prompt = """
@@ -241,24 +270,67 @@ def main():
                 and provide the key points within 250 words. Here is the transcript:
                 """
 
-                with st.spinner("Generating summary..."):
+                with st.spinner("🤖 Generating AI summary..."):
                     summary = generate_gemini_summary(transcript_text, y_prompt)
 
                 if summary:
                     st.markdown("### 📝 **Video Summary:**")
-                    st.write(summary)
+                    st.info(summary)
                     
-                    # Additional features
-                    with st.expander("📊 Transcript Details"):
-                        st.write(f"**Transcript Length:** {len(transcript_text)} characters")
-                        st.write(f"**Estimated Reading Time:** {len(transcript_text.split()) // 200} minutes")
+                    # Enhanced additional features
+                    with st.expander("📊 Transcript Analytics", expanded=False):
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Transcript Length", f"{len(transcript_text):,} characters")
+                        with col2:
+                            st.metric("Estimated Reading Time", f"{len(transcript_text.split()) // 200} minutes")
                 else:
                     st.error("Failed to generate summary. Please try again.")
             except Exception as e:
                 st.error(f"An error occurred: {e}")
-                st.info("Make sure the YouTube URL is valid and the video has captions available.")
+                st.info("💡 Make sure the YouTube URL is valid and the video has captions available.")
 
-    # Footer
+    elif option == "Chat with PDFs":
+        st.markdown("### 📚 PDF Chat Assistant")
+        st.markdown("Upload your PDF documents and ask intelligent questions to get instant answers")
+        
+        user_question = st.text_input(
+            "💬 Ask a Question from the PDF files:",
+            placeholder="e.g., What is the main topic discussed in the document?",
+            help="Type your question about the uploaded PDF content"
+        )
+
+        if user_question:
+            user_input(user_question)
+
+        with st.sidebar:
+            st.markdown("### 📁 Upload Documents")
+            st.markdown("Upload your PDF files to start chatting")
+            
+            pdf_docs = st.file_uploader(
+                "Choose PDF Files",
+                accept_multiple_files=True,
+                type=['pdf'],
+                help="Select one or more PDF files to analyze"
+            )
+
+            if st.button("🚀 Process Documents", type="primary", use_container_width=True):
+                if pdf_docs:
+                    with st.spinner("🔄 Processing your PDFs..."):
+                        raw_text = get_pdf_text(pdf_docs)
+                        if not raw_text.strip():
+                            st.warning("⚠️ Uploaded PDFs contain no text. Please upload valid PDFs.")
+                            return
+                        text_chunks = get_text_chunks(raw_text)
+                        get_vector_store(text_chunks)
+                        st.success("✅ PDFs processed successfully! You can now ask questions.")
+                else:
+                    st.warning("📋 Please upload at least one PDF file.")
+
+    # Display navigation section after main content
+    display_navigation_section()
+
+    # Enhanced footer
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; padding: 20px; color: #666;">

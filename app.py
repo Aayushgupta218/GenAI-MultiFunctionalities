@@ -139,14 +139,6 @@ def display_navigation_section():
         </div>
         """, unsafe_allow_html=True)
         
-        # Alternative method using st.link_button (if available in your Streamlit version)
-        # st.link_button(
-        #     "🔍 Open SQL Query Generator", 
-        #     sql_url,
-        #     help="Generate SQL queries from natural language",
-        #     use_container_width=True
-        # )
-        
         # Features list
         with st.expander("✨ SQL Generator Features"):
             st.markdown("""

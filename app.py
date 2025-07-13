@@ -40,7 +40,6 @@ def get_vector_store(text_chunks):
     vector_store.save_local("faiss_index")
 
 def get_conversational_chain():
-    # Enhanced prompt for more detailed and contextual responses
     prompt_template = """
     You are an advanced AI document analyst with expertise in comprehensive information extraction and analysis.
     
@@ -280,7 +279,6 @@ def generate_comprehensive_summary(transcript_text, summary_type="detailed"):
     }
     
     try:
-        # Use gemini-1.5-flash for better free tier performance
         model = genai.GenerativeModel("gemini-1.5-flash")
         
         if not transcript_text:
@@ -428,10 +426,9 @@ def display_navigation_section():
         """, unsafe_allow_html=True)
         
         sql_url = "https://sqlquerygenerator-7xbeqcgnivqtywjghc4sd3.streamlit.app/"
-        
         if st.button("🚀 Launch SQL Generator", key="sql_generator_btn", use_container_width=True):
-            st.markdown(f'<meta http-equiv="refresh" content="0; url={sql_url}">', unsafe_allow_html=True)
-            st.success("Redirecting to SQL Generator...")
+            st.markdown(f"[Open SQL Query Generator]({sql_url})", unsafe_allow_html=True)
+            st.success("Click the link above to open the SQL Generator in a new tab.")
         
         with st.expander("✨ SQL Generator Features", expanded=False):
             st.markdown("""
